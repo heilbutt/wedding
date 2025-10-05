@@ -45,14 +45,19 @@ def embed_markdown_into_html(
     content_tag.append(fragment)
 
     # Replace <img> sources with base64 data URIs
+    N_embedded = 0
     for img_tag in soup.find_all('img'):
         relative_path = img_tag.get('src')
         if not relative_path:
             continue
         img_tag['src'] = image_to_base64_uri(markdown_path.parent/str(relative_path))
+        N_embedded += 1
             
     # Save output HTML file
     output_html_path.write_text(soup.prettify(), encoding='utf-8')
+    
+    print(f'Markdown embedded from "{markdown_path}" into "{output_html_path}"')
+    print(f'Embedded {N_embedded} images as data URIs')
 
 
 def set_html_page_title(
@@ -70,11 +75,13 @@ def set_html_page_title(
 
     # Overwrite file
     html_path.write_text(soup.prettify(), encoding='utf-8')
+    
+    print(f'HTML page title in "{html_path}" changed to "{page_title}"')
 
 
 def set_html_link_to_stylesheet(
         html_path: Path,
-        stylesheet_path: Path,
+        relative_stylesheet_url: str,
 ) -> None:
     
     html_text = html_path.read_text(encoding='utf-8')
@@ -83,10 +90,33 @@ def set_html_link_to_stylesheet(
     link_tag = soup.find('link', rel='stylesheet')
     if not link_tag:
         raise ValueError(f'Stylesheet link tag not found in file "{html_path}"')
-    link_tag['href'] = stylesheet_path.relative_to(html_path.parent, walk_up=True).as_posix()
+    link_tag['href'] = relative_stylesheet_url
 
     # Overwrite file
     html_path.write_text(soup.prettify(), encoding='utf-8')
+
+    print(f'Stylesheet linked as "{relative_stylesheet_url}" in file "{html_path}"')
+
+
+def set_external_links_new_tab(
+        html_path: Path
+) -> None:
+    
+    html_text = html_path.read_text(encoding='utf-8')
+    soup = BeautifulSoup(html_text, 'html.parser')
+
+    N_links = 0
+    for link_tag in soup.find_all('a', href=True):
+        href = str(link_tag['href'])
+        # Only modify external links
+        if href.startswith('http') or href.startswith('//'):
+            link_tag['target'] = '_blank'
+            N_links += 1
+
+    # Overwrite file
+    html_path.write_text(soup.prettify(), encoding='utf-8')
+
+    print(f'Modified {N_links} links in "{html_path}" to open in new tab')
 
 
 def encrypt_with_pagecrypt(
@@ -110,6 +140,9 @@ def encrypt_with_pagecrypt(
         unencrypted_html_path.with_stem(unencrypted_html_path.stem + '-protected'),
         encrypted_html_path
         )
+    
+    print(f'PageCrypt successful: "{unencrypted_html_path}" encrypted to "{encrypted_html_path}"')
+
 
 def main() -> None:
 
@@ -117,40 +150,56 @@ def main() -> None:
     root = Path(__file__).parent.parent
     content_md_path = root/'secret'/'content.md'
     template_path = root/'tools'/'template.html'
-    css_path = root/'style.css'
+    stylesheet_path = root/'style.css'
     pagecrypt_path = root/'tools'/'PageCrypt'
     unencrypted_website_path = root/'secret'/'website-unencrypted.html'
     encrypted_website_path = root/'index.html'
     config_path = root/'secret'/'website-config.toml'
     
+    # read secret configuration from TOML
     config = tomllib.loads(config_path.read_text(encoding='utf-8'))
 
-    # embed markdown, encrypt, set title of encrypted file    
+    # embed markdown as HTML and images as data URIs
     embed_markdown_into_html(
         markdown_path=content_md_path,
         output_html_path=unencrypted_website_path,
         template_html_path=template_path,
         insert_at_id='content-container'
         )
+    
+    # set page title
+    set_html_page_title(
+        html_path=unencrypted_website_path,
+        page_title=config['page_title']
+        )
+    
+    # set link to stylesheet as relative URL
+    set_html_link_to_stylesheet(
+        html_path=unencrypted_website_path,
+        relative_stylesheet_url=stylesheet_path.relative_to(encrypted_website_path.parent, walk_up=True).as_posix()
+        )
+    
+    # make all external links open in new tab
+    set_external_links_new_tab(unencrypted_website_path)
+    
+    # encrypt with pagecrypt
     encrypt_with_pagecrypt(
         unencrypted_html_path=unencrypted_website_path,
         encrypted_html_path=encrypted_website_path,
         pagecrypt_root=pagecrypt_path,
         password=config['password']
         )
+    
+    # set page title of encrypted file since it has been altered by PageCrypt
     set_html_page_title(
         html_path=encrypted_website_path,
         page_title=config['page_title']
         )
     
-    # modify the unencrypted file for previewing purposes only
-    set_html_page_title(
-        html_path=unencrypted_website_path,
-        page_title=config['page_title']
-        )
+    # for preview only: retroactively modify stylesheet link in unencrypted file
     set_html_link_to_stylesheet(
         html_path=unencrypted_website_path,
-        stylesheet_path=css_path
+        relative_stylesheet_url=stylesheet_path.relative_to(unencrypted_website_path.parent, walk_up=True).as_posix()
         )
 
 if __name__ == '__main__':
