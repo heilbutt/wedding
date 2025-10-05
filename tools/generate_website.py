@@ -15,39 +15,44 @@ def image_to_base64_uri(
     
     mime_type, _ = mimetypes.guess_type(image_path)
     if not mime_type:
-        raise RuntimeError(f'Could not determine mime type of file {image_path}')
+        raise ValueError(f'Could not determine mime type of file {image_path}')
     
     base64_data = base64.b64encode(image_path.read_bytes()).decode('ascii')
     return f'data:{mime_type};base64,{base64_data}'
 
 
-def markdown_to_html_with_embedded_images(
+def insert_markdown_into_html_template(
         markdown_path: Path,
-        html_template_path: Path,
-        html_output_path: Path,
-        placeholder: str
+        template_html_path: Path,
+        output_html_path: Path,
+        insert_at_id: str,
+        embed_images: bool = True,
 ) -> None:
     
-    # load markdown
+    # load markdown and convert to bs4 HTML fragment
     markdown_text = markdown_path.read_text(encoding='utf-8')
-
-    # convert markdown to HTML
     html_text = markdown.markdown(markdown_text, output_format='html')
+    fragment = BeautifulSoup(html_text, 'html.parser')
 
-    # insert into template
-    html_template = html_template_path.read_text(encoding='utf-8')
-    html_filled = html_template.replace(placeholder, html_text)
+    # parse template HTML using bs4
+    soup = BeautifulSoup(template_html_path.read_text(encoding='utf-8'), 'html.parser')
 
-    # Parse HTML to replace <img> sources with base64 data URIs
-    soup = BeautifulSoup(html_filled, 'html.parser')
-    for img_tag in soup.find_all('img'):
-        relative_path = img_tag.get('src')
-        if not relative_path:
-            continue
-        img_tag['src'] = image_to_base64_uri(markdown_path.parent/str(relative_path))
+    # insert fragment at specified id
+    content_tag = soup.find(id=insert_at_id)
+    if not content_tag:
+        raise ValueError(f'Could not find HTML tag with id {insert_at_id} in file {template_html_path}')
+    content_tag.append(fragment)
+
+    # Replace <img> sources with base64 data URIs
+    if embed_images:
+        for img_tag in soup.find_all('img'):
+            relative_path = img_tag.get('src')
+            if not relative_path:
+                continue
+            img_tag['src'] = image_to_base64_uri(markdown_path.parent/str(relative_path))
             
-    # Save output
-    html_output_path.write_text(str(soup), encoding='utf-8')
+    # Save output HTML file
+    output_html_path.write_text(soup.prettify(), encoding='utf-8')
 
 
 def set_html_page_title(
@@ -60,9 +65,11 @@ def set_html_page_title(
     
     title_tag = soup.find('title')
     if not title_tag:
-        raise RuntimeError(f'Tag <title> not found in file {html_path}')
-
+        raise ValueError(f'Tag <title> not found in file {html_path}')
     title_tag.string = page_title
+
+    # Overwrite file
+    html_path.write_text(soup.prettify(), encoding='utf-8')
 
 
 def main() -> None:
@@ -73,11 +80,11 @@ def main() -> None:
     unencrypted_website_path = root_directory / 'secret' / 'website_unencrypted.html'
     markdown_path = root_directory / 'secret' / 'content.md'
 
-    markdown_to_html_with_embedded_images(
+    insert_markdown_into_html_template(
         markdown_path=markdown_path,
-        html_template_path=unencrypted_template_path,
-        html_output_path=unencrypted_website_path,
-        placeholder='<!-- CONTENT -->'
+        template_html_path=unencrypted_template_path,
+        output_html_path=unencrypted_website_path,
+        insert_at_id='content-container'
     )
 
     set_html_page_title(unencrypted_website_path, 'Test page title')
