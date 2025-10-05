@@ -1,0 +1,3 @@
+[submodule "tools/PageCrypt"]
+	path = tools/PageCrypt
+	url = git@github.com:MaxLaumeister/PageCrypt.git

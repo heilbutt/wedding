@@ -3,7 +3,9 @@ import markdown
 from bs4 import BeautifulSoup
 import base64
 import mimetypes
-
+import os
+import shutil
+import tomllib
 
 def image_to_base64_uri(
         image_path: Path
@@ -11,22 +13,21 @@ def image_to_base64_uri(
     
     image_path = Path(image_path)
     if not image_path.is_file():
-        raise FileNotFoundError(f'Could not find file {image_path}')
+        raise FileNotFoundError(f'Could not find file "{image_path}"')
     
     mime_type, _ = mimetypes.guess_type(image_path)
     if not mime_type:
-        raise ValueError(f'Could not determine mime type of file {image_path}')
+        raise ValueError(f'Could not determine mime type of file "{image_path}"')
     
     base64_data = base64.b64encode(image_path.read_bytes()).decode('ascii')
     return f'data:{mime_type};base64,{base64_data}'
 
 
-def insert_markdown_into_html_template(
+def embed_markdown_into_html(
         markdown_path: Path,
-        template_html_path: Path,
         output_html_path: Path,
-        insert_at_id: str,
-        embed_images: bool = True,
+        template_html_path: Path,
+        insert_at_id: str
 ) -> None:
     
     # load markdown and convert to bs4 HTML fragment
@@ -40,16 +41,15 @@ def insert_markdown_into_html_template(
     # insert fragment at specified id
     content_tag = soup.find(id=insert_at_id)
     if not content_tag:
-        raise ValueError(f'Could not find HTML tag with id {insert_at_id} in file {template_html_path}')
+        raise ValueError(f'Could not find HTML tag with id "{insert_at_id}" in file "{template_html_path}"')
     content_tag.append(fragment)
 
     # Replace <img> sources with base64 data URIs
-    if embed_images:
-        for img_tag in soup.find_all('img'):
-            relative_path = img_tag.get('src')
-            if not relative_path:
-                continue
-            img_tag['src'] = image_to_base64_uri(markdown_path.parent/str(relative_path))
+    for img_tag in soup.find_all('img'):
+        relative_path = img_tag.get('src')
+        if not relative_path:
+            continue
+        img_tag['src'] = image_to_base64_uri(markdown_path.parent/str(relative_path))
             
     # Save output HTML file
     output_html_path.write_text(soup.prettify(), encoding='utf-8')
@@ -65,7 +65,7 @@ def set_html_page_title(
     
     title_tag = soup.find('title')
     if not title_tag:
-        raise ValueError(f'Tag <title> not found in file {html_path}')
+        raise ValueError(f'Title tag not found in file "{html_path}"')
     title_tag.string = page_title
 
     # Overwrite file
@@ -82,29 +82,76 @@ def set_html_link_to_stylesheet(
     
     link_tag = soup.find('link', rel='stylesheet')
     if not link_tag:
-        raise ValueError(f'Stylesheet link tag not found in file {html_path}')
+        raise ValueError(f'Stylesheet link tag not found in file "{html_path}"')
     link_tag['href'] = stylesheet_path.relative_to(html_path.parent, walk_up=True).as_posix()
 
     # Overwrite file
     html_path.write_text(soup.prettify(), encoding='utf-8')
 
 
+def encrypt_with_pagecrypt(
+        unencrypted_html_path: Path,
+        encrypted_html_path: Path,
+        pagecrypt_root: Path,
+        password: str
+) -> None:
+    
+    command = ' '.join([
+        'python',
+        (pagecrypt_root/'python'/'encrypt.py').as_posix(),
+        unencrypted_html_path.as_posix(),
+        password
+        ]) 
+    os.system(command)
+
+    # PageCrypt created a file with suffix "-protected" in same directory as unencrypted file
+    # move it to desired location
+    shutil.move(
+        unencrypted_html_path.with_stem(unencrypted_html_path.stem + '-protected'),
+        encrypted_html_path
+        )
+
 def main() -> None:
 
+    # paths
     root = Path(__file__).parent.parent
-    unencrypted_website_path = root/'secret'/'website_unencrypted.html'
+    content_md_path = root/'secret'/'content.md'
+    template_path = root/'tools'/'template.html'
+    css_path = root/'style.css'
+    pagecrypt_path = root/'tools'/'PageCrypt'
+    unencrypted_website_path = root/'secret'/'website-unencrypted.html'
+    encrypted_website_path = root/'index.html'
+    config_path = root/'secret'/'website-config.toml'
+    
+    config = tomllib.loads(config_path.read_text(encoding='utf-8'))
 
-    insert_markdown_into_html_template(
-        markdown_path=root/'secret'/'content.md',
-        template_html_path=root/'tools'/'template.html',
+    # embed markdown, encrypt, set title of encrypted file    
+    embed_markdown_into_html(
+        markdown_path=content_md_path,
         output_html_path=unencrypted_website_path,
+        template_html_path=template_path,
         insert_at_id='content-container'
-    )
-
-    set_html_page_title(unencrypted_website_path, 'Test page title')
-
-    set_html_link_to_stylesheet(unencrypted_website_path, root/'style.css')
-
+        )
+    encrypt_with_pagecrypt(
+        unencrypted_html_path=unencrypted_website_path,
+        encrypted_html_path=encrypted_website_path,
+        pagecrypt_root=pagecrypt_path,
+        password=config['password']
+        )
+    set_html_page_title(
+        html_path=encrypted_website_path,
+        page_title=config['page_title']
+        )
+    
+    # modify the unencrypted file for previewing purposes only
+    set_html_page_title(
+        html_path=unencrypted_website_path,
+        page_title=config['page_title']
+        )
+    set_html_link_to_stylesheet(
+        html_path=unencrypted_website_path,
+        stylesheet_path=css_path
+        )
 
 if __name__ == '__main__':
     main()
