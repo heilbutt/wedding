@@ -72,22 +72,38 @@ def set_html_page_title(
     html_path.write_text(soup.prettify(), encoding='utf-8')
 
 
+def set_html_link_to_stylesheet(
+        html_path: Path,
+        stylesheet_path: Path,
+) -> None:
+    
+    html_text = html_path.read_text(encoding='utf-8')
+    soup = BeautifulSoup(html_text, 'html.parser')
+    
+    link_tag = soup.find('link', rel='stylesheet')
+    if not link_tag:
+        raise ValueError(f'Stylesheet link tag not found in file {html_path}')
+    link_tag['href'] = stylesheet_path.relative_to(html_path.parent, walk_up=True).as_posix()
+
+    # Overwrite file
+    html_path.write_text(soup.prettify(), encoding='utf-8')
+
+
 def main() -> None:
 
-    root_directory = Path(__file__).parent.parent
-
-    unencrypted_template_path = root_directory / 'tools' / 'template_unencrypted.html'
-    unencrypted_website_path = root_directory / 'secret' / 'website_unencrypted.html'
-    markdown_path = root_directory / 'secret' / 'content.md'
+    root = Path(__file__).parent.parent
+    unencrypted_website_path = root/'secret'/'website_unencrypted.html'
 
     insert_markdown_into_html_template(
-        markdown_path=markdown_path,
-        template_html_path=unencrypted_template_path,
+        markdown_path=root/'secret'/'content.md',
+        template_html_path=root/'tools'/'template.html',
         output_html_path=unencrypted_website_path,
         insert_at_id='content-container'
     )
 
     set_html_page_title(unencrypted_website_path, 'Test page title')
+
+    set_html_link_to_stylesheet(unencrypted_website_path, root/'style.css')
 
 
 if __name__ == '__main__':
