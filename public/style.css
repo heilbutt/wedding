@@ -1,0 +1,79 @@
+/* Main body and containers for content and header/footer image */
+
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Georgia', 'serif';
+    background: antiquewhite;
+}
+
+#content-container, .background-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+#content-container {
+    padding: 24px;
+}
+
+.background-container img {
+    width: 100%;
+    height: auto;
+}
+
+/* Text, headings, and other colors */
+
+p, li, span {
+    color: sienna;
+    font-size: 1.1rem;
+}
+
+h1, h2 {
+    font-family: 'Palatino Linotype', 'Book Antiqua', 'Palatino', 'serif';
+}
+
+h1 {
+    color: peru;
+    font-weight: 700;
+    font-size: 2.8rem;
+    margin-bottom: 0.4em;
+}
+
+h2 {
+    color: peru;
+    font-weight: 600;
+    font-size: 2rem;
+    margin-bottom: 0.6em;
+}
+
+a {
+    color: steelblue;
+    text-decoration: none;
+    transition: color 0.3s ease, background 0.3s ease;
+}
+
+a:hover, a:focus {
+    color: peru;
+}
+
+/* Use below to adjust depending on view screen size, e.g. for phones and tablets */
+
+/*@media (max-width: 1000px) {
+    .container {
+        width: 95vw;
+        padding: 8vw 2vw;
+    }
+    .bg-top, .bg-bottom {
+        min-height: 120px;
+    }
+}
+@media (max-width: 600px) {
+    .container {
+        width: 100vw;
+        padding: 16px 0;
+    }
+    .bg-top, .bg-bottom {
+        min-height: 80px;
+    }
+}*/
