@@ -22,6 +22,11 @@ body {
     height: auto;
 }
 
+#content-container img {
+    max-width: 100%;
+    height: auto;
+}
+
 .footer {
     position: fixed;
     bottom: 0;
@@ -61,16 +66,20 @@ h2 {
 }
 
 a {
+    display: inline-block; /* required for certain hover effects */
+    position: relative;    /* required for certain hover effects */
     color: steelblue;
     text-decoration: none;
     transition: color 0.3s ease, background 0.3s ease;
 }
 
+/* Hyperlinks: color fade */
 a:hover, a:focus {
     color: peru;
 }
 
-/* Use below to adjust depending on view screen size, e.g. for phones and tablets */
+
+/* Use the below to adjust depending on view screen size, e.g. for phones and tablets */
 
 /*@media (max-width: 1000px) {
     .container {
