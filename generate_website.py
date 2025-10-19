@@ -9,9 +9,9 @@ import tomllib
 
 
 def insert_markdown_into_html(
-        soup: BeautifulSoup,
-        markdown_path: Path,
-        insert_at_id: str
+    soup: BeautifulSoup,
+    markdown_path: Path,
+    insert_at_id: str
 ) -> None:
     """Insert rendered Markdown into an HTML document at a specific element.
 
@@ -52,7 +52,7 @@ def insert_markdown_into_html(
 
 
 def _image_to_base64_uri(
-        image_path: Path
+    image_path: Path
 ) -> str:
     """Convert an image file to a base64 data URI string.
 
@@ -91,8 +91,8 @@ def _image_to_base64_uri(
 
 
 def embed_images_into_html(
-        soup: BeautifulSoup,
-        root_path: Path
+    soup: BeautifulSoup,
+    root_path: Path
 ) -> None:
     """Embed referenced images in an HTML document as base64 data URIs.
 
@@ -122,8 +122,8 @@ def embed_images_into_html(
 
 
 def set_html_page_title(
-        soup: BeautifulSoup,
-        page_title: str
+    soup: BeautifulSoup,
+    page_title: str
 ) -> None:
     """Set the text content of the document <title> tag.
 
@@ -151,8 +151,8 @@ def set_html_page_title(
 
 
 def set_html_link_to_stylesheet(
-        soup: BeautifulSoup,
-        relative_stylesheet_url: str,
+    soup: BeautifulSoup,
+    relative_stylesheet_url: str,
 ) -> None:
     """Point the document's stylesheet link to a new relative URL.
 
@@ -180,7 +180,7 @@ def set_html_link_to_stylesheet(
 
 
 def set_external_links_new_tab(
-        soup: BeautifulSoup
+    soup: BeautifulSoup
 ) -> None:
     """Update external anchor links to open in a new browser tab.
 
@@ -206,10 +206,10 @@ def set_external_links_new_tab(
 
 
 def encrypt_with_pagecrypt(
-        unencrypted_html_path: Path,
-        encrypted_html_path: Path,
-        pagecrypt_root: Path,
-        password: str
+    unencrypted_html_path: Path,
+    encrypted_html_path: Path,
+    pagecrypt_root: Path,
+    password: str
 ) -> None:
     """Encrypt an HTML file using the PageCrypt helper script.
 
