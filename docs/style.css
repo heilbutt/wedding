@@ -1,4 +1,4 @@
-/* Main body and containers for content and header/footer image */
+/* Main body and containers for content and banner image */
 
 body {
     margin: 0;
@@ -8,7 +8,7 @@ body {
     background: antiquewhite;
 }
 
-#content-container, .banner-container {
+#banner-container, #content-container {
     max-width: 800px;
     margin: 0 auto;
 }
@@ -17,7 +17,7 @@ body {
     padding: 24px;
 }
 
-.banner-container img {
+#banner-container img {
     width: 100%;
     height: auto;
 }
@@ -27,7 +27,7 @@ body {
     height: auto;
 }
 
-.footer {
+#footer {
     position: fixed;
     bottom: 0;
     left: 0;
