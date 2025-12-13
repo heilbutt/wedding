@@ -147,7 +147,7 @@ def get_h1_heading_from_html(
     return h1_tag.string
 
 
-def set_html_page_title(
+def set_page_title(
     soup: BeautifulSoup,
     page_title: str
 ) -> None:
@@ -162,7 +162,7 @@ def set_html_page_title(
     print(f'HTML page title changed to "{page_title}"')
 
 
-def set_html_link_to_stylesheet(
+def set_link_to_stylesheet(
     soup: BeautifulSoup,
     relative_stylesheet_url: str,
 ) -> None:
@@ -280,6 +280,7 @@ def main() -> None:
         secret_source_path = root/'source-secret'/f'content-{language}.md'
         secret_output_path = root/'docs-secret'/f'{language}.html'
         public_output_path = root/'docs'/f'{language}.html'
+        stylesheet_path = public_output_path.parent/'style.css'
 
         # load HTML template
         soup = BeautifulSoup(template_path.read_text(), 'html.parser')
@@ -288,8 +289,11 @@ def main() -> None:
         insert_markdown_into_html(soup, secret_source_path, 'content-container')
         embed_images_into_html(soup, secret_source_path.parent)
         page_title = get_h1_heading_from_html(soup)
-        set_html_page_title(soup, page_title)
+        set_page_title(soup, page_title)
         set_external_links_new_tab(soup)
+
+        # link CSS relative to the public output path BEFORE encryption
+        set_link_to_stylesheet(soup, stylesheet_path.relative_to(public_output_path.parent, walk_up=True).as_posix())
 
         # write unencrypted file to disk
         secret_output_path.write_text(str(soup))
@@ -299,10 +303,14 @@ def main() -> None:
             secret_output_path, public_output_path,
             root/'PageCrypt', config['password']
         )
+
+        # link CSS relative to the secret output path AFTER encryption to fix preview
+        set_link_to_stylesheet(soup, stylesheet_path.relative_to(secret_output_path.parent, walk_up=True).as_posix())
+        secret_output_path.write_text(str(soup))
     
         # set page title of encrypted file since it has been altered by PageCrypt
         soup = BeautifulSoup(public_output_path.read_text(), 'html.parser')
-        set_html_page_title(soup, page_title)
+        set_page_title(soup, page_title)
         public_output_path.write_text(str(soup))
 
 
