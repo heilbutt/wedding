@@ -1,11 +1,22 @@
+"""Generate static wedding website pages from templates and Markdown.
+
+This module builds encrypted and public HTML pages from Markdown sources,
+embeds images as data URIs, and wraps the output with PageCrypt for password protection.
+"""
+
+__author__ = "Hermann Pommerenke"
+__email__ = "dev@pommerenke.ch"
+__copyright__ = "2025, Hermann Pommerenke"
+
 from pathlib import Path
-import markdown
-from bs4 import BeautifulSoup
 import base64
 import mimetypes
 import os
 import shutil
 import tomllib
+
+import markdown
+from bs4 import BeautifulSoup
 
 
 def insert_markdown_into_html(
@@ -121,30 +132,31 @@ def embed_images_into_html(
     print(f'Embedded {N_embedded} images as data URIs')
 
 
+def get_h1_heading_from_html(
+    soup:BeautifulSoup
+) -> str:
+
+    h1_tag = soup.find('h1')
+
+    if not h1_tag:
+        raise ValueError('No <h1> tag found')
+    
+    if not h1_tag.string:
+        return ''
+    
+    return h1_tag.string
+
+
 def set_html_page_title(
     soup: BeautifulSoup,
     page_title: str
 ) -> None:
-    """Set the text content of the document <title> tag.
 
-    Finds the first ``<title>`` tag in ``soup`` and replaces its string
-    contents with ``page_title``.
-
-    Parameters
-    ----------
-    soup: BeautifulSoup
-        Parsed HTML document to modify.
-    page_title: str
-        The new title to set.
-
-    Raises
-    ------
-    ValueError
-        If no ``<title>`` tag exists in ``soup``.
-    """
     title_tag = soup.find('title')
+    
     if not title_tag:
         raise ValueError(f'Title tag not found')
+
     title_tag.string = page_title
     
     print(f'HTML page title changed to "{page_title}"')
@@ -206,8 +218,8 @@ def set_external_links_new_tab(
 
 
 def encrypt_with_pagecrypt(
-    unencrypted_html_path: Path,
-    encrypted_html_path: Path,
+    secret_html_path: Path,
+    public_html_path: Path,
     pagecrypt_root: Path,
     password: str
 ) -> None:
@@ -240,75 +252,58 @@ def encrypt_with_pagecrypt(
     command = ' '.join([
         'python',
         (pagecrypt_root/'python'/'encrypt.py').as_posix(),
-        unencrypted_html_path.as_posix(),
+        secret_html_path.as_posix(),
         password
         ]) 
     os.system(command)
 
     # PageCrypt created a file with suffix "-protected" in same directory as unencrypted file
     # move it to desired location
-    pagecrypt_output: Path = unencrypted_html_path.with_stem(unencrypted_html_path.stem + '-protected')
+    pagecrypt_output: Path = secret_html_path.with_stem(secret_html_path.stem + '-protected')
     if not pagecrypt_output.exists():
-        raise FileNotFoundError('PageCrypt output file "{pagecrypt_output}" expected, but nothing found')
-    shutil.move(pagecrypt_output, encrypted_html_path)
+        raise FileNotFoundError(f'PageCrypt output file "{pagecrypt_output}" expected, but nothing found')
+    shutil.move(pagecrypt_output, public_html_path)
     
-    print(f'PageCrypt successful: "{unencrypted_html_path}" encrypted to "{encrypted_html_path}"')
+    print(f'PageCrypt successful: "{secret_html_path}" encrypted to "{public_html_path}"')
 
 
 def main() -> None:
-    """Build the website: assemble HTML, embed assets, and encrypt output.
-
-    Reads configuration from ``secret/website-config.toml``, renders the site
-    by inserting Markdown content into the template, embeds images as data
-    URIs, sets titles and stylesheet links, writes an unencrypted preview,
-    then encrypts the site using PageCrypt and writes the final encrypted
-    HTML to ``docs/index.html``. Performs several filesystem writes and
-    relies on the repository layout (``secret/``, ``template/``,
-    ``PageCrypt/``, and ``docs/`` directories).
-    """
 
     root = Path(__file__).parent
     
     # read secret configuration
-    config_path = root/'secret'/'website-config.toml'
-    config = tomllib.loads(config_path.read_text())
+    config: dict = tomllib.loads((root/'source-secret'/'website-config.toml').read_text())
 
-    # load HTML template
-    template_path = root/'template'/'template.html'
-    soup = BeautifulSoup(template_path.read_text(), 'html.parser')
+    for language in config['languages']:
 
-    # assemble unencrypted HTML
-    content_markdown_path = root/'secret'/'content.md'
-    stylesheet_path = root/'docs'/'style.css'
-    pagecrypt_path = root/'PageCrypt'
-    unencrypted_website_path = root/'secret'/'website-unencrypted.html'
-    encrypted_website_path = root/'docs'/'index.html'
-    insert_markdown_into_html(soup, content_markdown_path, 'content-container')
-    embed_images_into_html(soup, content_markdown_path.parent)
-    set_html_page_title(soup, config['title'])
-    set_html_link_to_stylesheet(soup, stylesheet_path.relative_to(encrypted_website_path.parent, walk_up=True).as_posix())
-    set_external_links_new_tab(soup)
+        template_path = root/'template'/'template.html'
+        secret_source_path = root/'source-secret'/f'content-{language}.md'
+        secret_output_path = root/'docs-secret'/f'{language}.html'
+        public_output_path = root/'docs'/f'{language}.html'
 
-    # write unencrypted file to disk
-    unencrypted_website_path.write_text(str(soup))
+        # load HTML template
+        soup = BeautifulSoup(template_path.read_text(), 'html.parser')
+
+        # assemble unencrypted HTML
+        insert_markdown_into_html(soup, secret_source_path, 'content-container')
+        embed_images_into_html(soup, secret_source_path.parent)
+        page_title = get_h1_heading_from_html(soup)
+        set_html_page_title(soup, page_title)
+        set_external_links_new_tab(soup)
+
+        # write unencrypted file to disk
+        secret_output_path.write_text(str(soup))
     
-    # create encrypted website
-    encrypt_with_pagecrypt(
-        unencrypted_website_path,
-        encrypted_website_path,
-        pagecrypt_path,
-        config['password']
+        # create encrypted page
+        encrypt_with_pagecrypt(
+            secret_output_path, public_output_path,
+            root/'PageCrypt', config['password']
         )
     
-    # set page title of encrypted file since it has been altered by PageCrypt
-    soup = BeautifulSoup(encrypted_website_path.read_text(), 'html.parser')
-    set_html_page_title(soup, config['title'])
-    encrypted_website_path.write_text(str(soup))
-    
-    # for preview only: retroactively modify stylesheet link in unencrypted file
-    soup = BeautifulSoup(unencrypted_website_path.read_text(), 'html.parser')
-    set_html_link_to_stylesheet(soup, stylesheet_path.relative_to(unencrypted_website_path.parent, walk_up=True).as_posix())
-    unencrypted_website_path.write_text(str(soup))
+        # set page title of encrypted file since it has been altered by PageCrypt
+        soup = BeautifulSoup(public_output_path.read_text(), 'html.parser')
+        set_html_page_title(soup, page_title)
+        public_output_path.write_text(str(soup))
 
 
 if __name__ == '__main__':

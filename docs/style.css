@@ -1,101 +1,154 @@
-/* Main body and containers for content and banner image */
+/* Global definitions */
+
+/* Import font from Google Fonts - this must be at the top*/
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300..700;1,300..700&family=Waterfall&display=swap');
+
+:root {
+    --background-color: rgb(248, 247, 237);
+    --content-background-color: rgba(248, 247, 237, 0.6);
+    --content-backdrop-filter: blur(24px);
+    --heading-color: rgb(19, 79, 150);
+    --text-color: rgb(37, 41, 47);
+    --link-color: rgb(214, 64, 9); 
+    --link-hover-color: var(--heading-color);
+}
+
+
+/* Main body */
+
 
 body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Georgia', 'serif';
-    background: antiquewhite;
+    font-family: 'Cormorant', 'serif';
+    font-weight: 500;
+    font-size: 1.4rem;
+    color: var(--text-color);
+    background-color: var(--background-color);
 }
 
-#banner-container, #content-container {
-    max-width: 800px;
+
+/* Main page elements */
+
+
+div#banner-container {
+    max-width: 100vw;
     margin: 0 auto;
+    position: fixed;
+    top: 0;
 }
 
-#content-container {
-    padding: 24px;
-}
-
-#banner-container img {
+div#banner-container img {
     width: 100%;
     height: auto;
+    display: block;
 }
 
-#content-container img {
+div#content-container {
+    max-width: 900px;
+    margin: auto;
+    margin-top: calc(100vw * 0.25); /* dynamically leave top margin for banner image*/
+    padding: 24px;
+    background-color: var(--content-background-color);
+    backdrop-filter: var(--content-backdrop-filter);
+    border-radius: 24px;
+    text-align: center;
+}
+
+div#content-container img {
     max-width: 100%;
     height: auto;
+    display: block;
+    margin: auto;
 }
 
-#footer {
+div#footer {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 50px;
-    background: linear-gradient(to bottom, transparent 0%, antiquewhite 33%);
+    height: 40px;
+    background-color: var(--content-background-color);
+    backdrop-filter: var(--content-backdrop-filter);
     display: flex;
     align-items: center;
     justify-content: center;
     /*z-index: 1000; /* to be on top of other content */
 }
 
-/* Text, headings, and other colors */
-
-p, li, span {
-    color: sienna;
-    font-size: 1.1rem;
-}
-
 h1, h2 {
-    font-family: 'Palatino Linotype', 'Book Antiqua', 'Palatino', 'serif';
+    font-family: 'Waterfall', 'cursive';
+    color: var(--heading-color);
+    text-align: center;
 }
 
 h1 {
-    color: peru;
-    font-weight: 700;
-    font-size: 2.8rem;
+    font-weight: 500;
+    font-size: 6rem;
+    margin-top: 0.2em;
     margin-bottom: 0.4em;
 }
 
 h2 {
-    color: peru;
-    font-weight: 600;
-    font-size: 2rem;
+    font-weight: 500;
+    font-size: 4rem;
     margin-bottom: 0.6em;
 }
 
 a {
     display: inline-block; /* required for certain hover effects */
     position: relative;    /* required for certain hover effects */
-    color: steelblue;
+    color: var(--link-color);
     text-decoration: none;
-    transition: color 0.3s ease, background 0.3s ease;
+    transition: 0.3s ease;
 }
 
-/* Hyperlinks: color fade */
 a:hover, a:focus {
-    color: peru;
+    color: var(--link-hover-color);
+}
+
+ul, ol {
+    display: inline-block;
+    padding-left: 0;
+    text-align: left;
+}
+
+code {
+    font-size: 1rem;
+}
+
+/* Landing page elements */
+
+
+div#landing-container {
+    margin: auto;
+    max-width: 900px;
+    text-align: center;
+}
+
+div#landing-container a{
+    display: block;
+    width: 100%;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    font-size: 2rem;
+    transition: 0.5s ease;
+}
+
+div#landing-container a:hover {
+    transform: scale(1.2);
 }
 
 
 /* Use the below to adjust depending on view screen size, e.g. for phones and tablets */
 
-/*@media (max-width: 1000px) {
-    .container {
-        width: 95vw;
-        padding: 8vw 2vw;
+
+@media (max-width: 600px) {
+    h1 {
+        font-size: 4rem;
     }
-    .bg-top, .bg-bottom {
-        min-height: 120px;
+    h2 {
+        font-size: 3rem;
     }
 }
-@media (max-width: 600px) {
-    .container {
-        width: 100vw;
-        padding: 16px 0;
-    }
-    .bg-top, .bg-bottom {
-        min-height: 80px;
-    }
-}*/
