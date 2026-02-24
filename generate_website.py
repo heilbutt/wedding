@@ -6,7 +6,7 @@ embeds images as data URIs, and wraps the output with PageCrypt for password pro
 
 __author__ = "Hermann Pommerenke"
 __email__ = "dev@pommerenke.ch"
-__copyright__ = "2025, Hermann Pommerenke"
+__copyright__ = "2025-2026, Hermann Pommerenke"
 
 from pathlib import Path
 import base64

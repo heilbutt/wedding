@@ -1,3 +1,5 @@
+.python-version
+.venv
 .vscode
 docs-secret
 source-secret
