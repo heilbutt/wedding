@@ -1,0 +1,3 @@
+# Separate .gitignore in this directory syncs it without its contents
+*
+!.gitignore

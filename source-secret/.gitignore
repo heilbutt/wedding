@@ -1,0 +1,6 @@
+# Ignore everything except for the example files
+*
+!.gitignore
+!website-config-example.toml
+!content-english-example.md
+!image-example.webp

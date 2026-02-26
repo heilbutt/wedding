@@ -4,9 +4,10 @@ This module builds encrypted and public HTML pages from Markdown sources,
 embeds images as data URIs, and wraps the output with PageCrypt for password protection.
 """
 
-__author__ = "Hermann Pommerenke"
-__email__ = "dev@pommerenke.ch"
-__copyright__ = "2025-2026, Hermann Pommerenke"
+__author__ = 'Hermann Pommerenke'
+__email__ = 'dev@pommerenke.ch'
+__copyright__ = '2025-2026, Hermann Pommerenke'
+__license__ = 'MIT'
 
 from pathlib import Path
 import base64
@@ -14,7 +15,6 @@ import mimetypes
 import os
 import shutil
 import tomllib
-
 import markdown
 from bs4 import BeautifulSoup
 
@@ -26,10 +26,9 @@ def insert_markdown_into_html(
 ) -> None:
     """Insert rendered Markdown into an HTML document at a specific element.
 
-    Reads Markdown from ``markdown_path``, converts it to HTML using the
-    ``markdown`` package, and replaces the contents of the element in
-    ``soup`` whose ``id`` attribute matches ``insert_at_id`` with the
-    generated HTML fragment. Modifies ``soup`` in-place.
+    Reads Markdown from `markdown_path`, converts it to HTML and replaces the
+    contents of the element in `soup` whose `id` attribute matches `insert_at_id` 
+    with the generated HTML fragment. Modifies `soup` in-place.
 
     Parameters
     ----------
@@ -38,14 +37,14 @@ def insert_markdown_into_html(
     markdown_path: Path
         Path to the Markdown file to read and render.
     insert_at_id: str
-        The id attribute of the element inside ``soup`` where the rendered
+        The id attribute of the element inside `soup` where the rendered
         Markdown should be inserted. The element's contents will be cleared
         and replaced.
 
     Raises
     ------
     ValueError
-        If no element with the given ``insert_at_id`` exists in ``soup``.
+        If no element with the given `insert_at_id` exists in `soup`.
     """
 
     # load markdown and convert to bs4 HTML fragment
@@ -67,9 +66,8 @@ def _image_to_base64_uri(
 ) -> str:
     """Convert an image file to a base64 data URI string.
 
-    Reads the bytes from ``image_path``, guesses the MIME type, encodes the
-    content as base64, and returns a data URI suitable for use as an ``src``
-    attribute on an ``<img>`` tag (for example ``data:image/png;base64,...``).
+    Reads the bytes from `image_path`, encodes the content as base64,
+    and returns a data URI suitable for an `<img>` tag.
 
     Parameters
     ----------
@@ -85,7 +83,7 @@ def _image_to_base64_uri(
     Raises
     ------
     FileNotFoundError
-        If ``image_path`` does not point to an existing file.
+        If `image_path` does not point to an existing file.
     ValueError
         If the MIME type for the file cannot be determined.
     """
@@ -107,10 +105,10 @@ def embed_images_into_html(
 ) -> None:
     """Embed referenced images in an HTML document as base64 data URIs.
 
-    Scans all ``<img>`` tags in ``soup`` and replaces their ``src``
+    Scans all `<img>` tags in `soup` and replaces their `src`
     attributes with base64 data URIs produced by :func:`_image_to_base64_uri`.
-    The incoming ``src`` values are treated as paths relative to
-    ``root_path``. Modifies ``soup`` in-place.
+    The incoming `src` values are treated as paths relative to
+    `root_path`. Modifies `soup` in-place.
 
     Parameters
     ----------
@@ -135,6 +133,24 @@ def embed_images_into_html(
 def get_h1_heading_from_html(
     soup:BeautifulSoup
 ) -> str:
+    """Return the text content of the first <h1> tag in an HTML document.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Parsed HTML document to search.
+
+    Returns
+    -------
+    str
+        The text content of the first <h1> tag. If the <h1> tag exists but
+        has no direct string content, an empty string is returned.
+
+    Raises
+    ------
+    ValueError
+        If no <h1> tag is present in the document.
+    """
 
     h1_tag = soup.find('h1')
 
@@ -151,6 +167,21 @@ def set_page_title(
     soup: BeautifulSoup,
     page_title: str
 ) -> None:
+    """Set the document's <title> element to a new value.
+    Modifies `soup` in-place.
+    
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Parsed HTML document to modify.
+    page_title : str
+        New title text to place inside the <title> element.
+
+    Raises
+    ------
+    ValueError
+        If a <title> tag cannot be found in the document.
+    """
 
     title_tag = soup.find('title')
     
@@ -159,8 +190,6 @@ def set_page_title(
 
     title_tag.string = page_title
     
-    print(f'HTML page title changed to "{page_title}"')
-
 
 def set_link_to_stylesheet(
     soup: BeautifulSoup,
@@ -168,15 +197,15 @@ def set_link_to_stylesheet(
 ) -> None:
     """Point the document's stylesheet link to a new relative URL.
 
-    Locates the first ``<link rel="stylesheet">`` tag in ``soup`` and
-    updates its ``href`` attribute to ``relative_stylesheet_url``.
+    Locates the first `<link rel="stylesheet">` tag in `soup` and
+    updates it to point to `relative_stylesheet_url`. Modifies `soup` in-place.
 
     Parameters
     ----------
     soup: BeautifulSoup
         Parsed HTML document to modify.
     relative_stylesheet_url: str
-        The relative URL to set on the stylesheet link's ``href``.
+        The relative URL to set on the stylesheet link.
 
     Raises
     ------
@@ -194,11 +223,11 @@ def set_link_to_stylesheet(
 def set_external_links_new_tab(
     soup: BeautifulSoup
 ) -> None:
-    """Update external anchor links to open in a new browser tab.
+    """Update external hyperlinks to open in a new browser tab.
 
-    Iterates over all ``<a>`` tags with an ``href`` and sets ``target="_blank"``
-    for links that appear to be external (those whose ``href`` starts with
-    ``http`` or ``//``).
+    Iterates over all `<a>` tags with an `href` and sets `target="_blank"`
+    for links that appear to be external (those whose `href` starts with
+    `http` or `//`). Modifies `soup` in-place.
 
     Parameters
     ----------
@@ -225,20 +254,19 @@ def encrypt_with_pagecrypt(
 ) -> None:
     """Encrypt an HTML file using the PageCrypt helper script.
 
-    Invokes the helper script located under ``pagecrypt_root/python/encrypt.py``
-    using ``os.system`` to create an encrypted version of
-    ``unencrypted_html_path``. PageCrypt writes an output file with the
-    suffix "-protected" in the same directory as the input; this function
-    moves that generated file to ``encrypted_html_path``.
+    Invokes the script located under `pagecrypt_root/python/encrypt.py`
+    to create an encrypted version of `secret_html_path`. PageCrypt writes an output file
+    with the suffix `-protected` in the same directory as the input; this function
+    moves that generated file to `public_html_path`.
 
     Parameters
     ----------
-    unencrypted_html_path: Path
+    secret_html_path: Path
         Path to input HTML file to encrypt.
-    encrypted_html_path: Path
+    public_html_path: Path
         Desired path for the final encrypted HTML file.
     pagecrypt_root: Path
-        Root directory of the PageCrypt distribution in the repo.
+        Root directory of the PageCrypt submodule in the repo.
     password: str
         Password to pass to the PageCrypt script for encryption.
 
