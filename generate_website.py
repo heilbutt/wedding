@@ -1,6 +1,6 @@
 """Generate static wedding website pages from templates and Markdown.
 
-This module builds encrypted and public HTML pages from Markdown sources,
+This script builds encrypted and public HTML pages from Markdown sources,
 embeds images as data URIs, and wraps the output with PageCrypt for password protection.
 """
 
@@ -26,20 +26,15 @@ def insert_markdown_into_html(
 ) -> None:
     """Insert rendered Markdown into an HTML document at a specific element.
 
-    Reads Markdown from `markdown_path`, converts it to HTML and replaces the
-    contents of the element in `soup` whose `id` attribute matches `insert_at_id` 
-    with the generated HTML fragment. Modifies `soup` in-place.
-
     Parameters
     ----------
     soup: BeautifulSoup
-        The parsed HTML document to modify.
+        Parsed HTML document. Will be modified in-place.
     markdown_path: Path
-        Path to the Markdown file to read and render.
+        Path to Markdown file to read and render.
     insert_at_id: str
-        The id attribute of the element inside `soup` where the rendered
-        Markdown should be inserted. The element's contents will be cleared
-        and replaced.
+        The `id` attribute of the element inside `soup` where the rendered
+        Markdown should be inserted. Contents will be cleared and replaced.
 
     Raises
     ------
@@ -66,9 +61,6 @@ def _image_to_base64_uri(
 ) -> str:
     """Convert an image file to a base64 data URI string.
 
-    Reads the bytes from `image_path`, encodes the content as base64,
-    and returns a data URI suitable for an `<img>` tag.
-
     Parameters
     ----------
     image_path: Path
@@ -78,7 +70,7 @@ def _image_to_base64_uri(
     -------
     str
         A data URI string containing the MIME type and base64-encoded image
-        data.
+        data, suitable for an `<img>` tag.
 
     Raises
     ------
@@ -104,16 +96,14 @@ def embed_images_into_html(
     root_path: Path
 ) -> None:
     """Embed referenced images in an HTML document as base64 data URIs.
-
-    Scans all `<img>` tags in `soup` and replaces their `src`
-    attributes with base64 data URIs produced by :func:`_image_to_base64_uri`.
-    The incoming `src` values are treated as paths relative to
-    `root_path`. Modifies `soup` in-place.
+    Scans all `<img>` tags and replaces their `src` with base64 data URIs
+    produced by :func:`_image_to_base64_uri`. Incoming `src` values are
+    treated as paths relative to `root_path`.
 
     Parameters
     ----------
     soup: BeautifulSoup
-        Parsed HTML document to modify.
+        Parsed HTML document. Will be modified in-place.
     root_path: Path
         Directory used as the base for resolving relative image paths.
     """
@@ -143,8 +133,7 @@ def get_h1_heading_from_html(
     Returns
     -------
     str
-        The text content of the first <h1> tag. If the <h1> tag exists but
-        has no direct string content, an empty string is returned.
+        The text content of the first <h1> tag. Can be empty string.
 
     Raises
     ------
@@ -167,15 +156,14 @@ def set_page_title(
     soup: BeautifulSoup,
     page_title: str
 ) -> None:
-    """Set the document's <title> element to a new value.
-    Modifies `soup` in-place.
+    """Set the HTML document's <title> element to a new value.
     
     Parameters
     ----------
     soup : BeautifulSoup
-        Parsed HTML document to modify.
+        Parsed HTML document. Will be modified in-place.
     page_title : str
-        New title text to place inside the <title> element.
+        New title text.
 
     Raises
     ------
@@ -196,16 +184,15 @@ def set_link_to_stylesheet(
     relative_stylesheet_url: str,
 ) -> None:
     """Point the document's stylesheet link to a new relative URL.
-
-    Locates the first `<link rel="stylesheet">` tag in `soup` and
-    updates it to point to `relative_stylesheet_url`. Modifies `soup` in-place.
+    Locates the first `<link rel="stylesheet">` and updates it to point
+    to `relative_stylesheet_url`.
 
     Parameters
     ----------
     soup: BeautifulSoup
-        Parsed HTML document to modify.
+        Parsed HTML document. Will be modified in-place.
     relative_stylesheet_url: str
-        The relative URL to set on the stylesheet link.
+        The relative URL to link.
 
     Raises
     ------
@@ -224,15 +211,12 @@ def set_external_links_new_tab(
     soup: BeautifulSoup
 ) -> None:
     """Update external hyperlinks to open in a new browser tab.
-
-    Iterates over all `<a>` tags with an `href` and sets `target="_blank"`
-    for links that appear to be external (those whose `href` starts with
-    `http` or `//`). Modifies `soup` in-place.
+    Iterates over all `<a>` tags with an `href` and sets `target="_blank"`.
 
     Parameters
     ----------
     soup: BeautifulSoup
-        Parsed HTML document to modify.
+        Parsed HTML document. Will be modified in-place.
     """
 
     N_links = 0
@@ -253,11 +237,10 @@ def encrypt_with_pagecrypt(
     password: str
 ) -> None:
     """Encrypt an HTML file using the PageCrypt helper script.
-
-    Invokes the script located under `pagecrypt_root/python/encrypt.py`
-    to create an encrypted version of `secret_html_path`. PageCrypt writes an output file
-    with the suffix `-protected` in the same directory as the input; this function
-    moves that generated file to `public_html_path`.
+    Invokes `pagecrypt_root/python/encrypt.py` to create an encrypted version of
+    `secret_html_path`. PageCrypt writes an output file with the suffix `-protected`
+    in the same directory as the input. This function moves that generated file
+    to `public_html_path`.
 
     Parameters
     ----------
@@ -296,7 +279,9 @@ def encrypt_with_pagecrypt(
 
 
 def main() -> None:
-
+    """Main function executed from entry point.
+    Should just work (TM), but can be modified as needed.
+    """
     root = Path(__file__).parent
     
     # read secret configuration
@@ -306,8 +291,8 @@ def main() -> None:
 
         template_path = root/'template'/'template.html'
         secret_source_path = root/'source-secret'/f'content-{language}.md'
-        secret_output_path = root/'docs-secret'/f'{language}.html'
-        public_output_path = root/'docs'/f'{language}.html'
+        secret_output_path = root/'dist-secret'/f'{language}.html'
+        public_output_path = root/'dist'/f'{language}.html'
         stylesheet_path = public_output_path.parent/'style.css'
 
         # load HTML template

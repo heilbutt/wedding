@@ -19,7 +19,7 @@ pip install -r requirements.txt -r PageCrypt/python/requirements.txt
 ### Build a template
 
 Start from the HTML template `template/template.html`. You can do basically whatever you want, but the following elements should be present:
-- A link to the stylesheet `docs/style.css`
+- A link to the stylesheet `dist/style.css`
 - A page `<title>`, this can be modified by the script
 - Some container where the content generated from Markdown will be inserted. By default this is a `<div>` with the ID `content-container`.
 
@@ -49,15 +49,15 @@ It should just work™️ if you followed the instructions and example files abo
 
 By default, the script
 1. Reads the configuration `source-secret/website-config.toml`.
-2. Creates *unencrypted* HTML files `docs-secret/$LANGUAGE.html` based on the template `template/template.html` and the source Markdown `source-secret/content-$LANGUAGE.md`. All referenced images will be embedded in Base64.
-3. Encrypts the pages using PageCrypt, outputting to `docs/$LANGUAGE.html`
-4. Ensures that page titles and link to stylesheet `docs/style.css` are consistent for intermediate and final output.
+2. Creates *unencrypted* HTML files `dist-secret/$LANGUAGE.html` based on the template `template/template.html` and the source Markdown `source-secret/content-$LANGUAGE.md`. All referenced images will be embedded in Base64.
+3. Encrypts the pages using PageCrypt, outputting to `dist/$LANGUAGE.html`
+4. Ensures that page titles and link to stylesheet `dist/style.css` are consistent for intermediate and final output.
 5. Makes external links open in a new tab.
 6. Repeats steps 2-5 for all `$LANGUAGE`s.
 
 ## Deployed website structure
 
-The website files is located under `docs/` and deployed via [GitHub pages](https://docs.github.com/en/pages).
+The website files is located under `dist/` and deployed via [GitHub pages](https://docs.github.com/en/pages).
 
 One unencrypted index page links to the content site in different lanugages. The content pages are all behind PageCrypt password protection.
 
