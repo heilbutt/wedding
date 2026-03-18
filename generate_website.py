@@ -291,8 +291,8 @@ def main() -> None:
 
         template_path = root/'template'/'template.html'
         secret_source_path = root/'source-secret'/f'content-{language}.md'
-        secret_output_path = root/'dist-secret'/f'{language}.html'
-        public_output_path = root/'dist'/f'{language}.html'
+        secret_output_path = root/'docs-secret'/f'{language}.html'
+        public_output_path = root/'docs'/f'{language}.html'
         stylesheet_path = public_output_path.parent/'style.css'
 
         # load HTML template
