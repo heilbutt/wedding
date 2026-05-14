@@ -2,7 +2,7 @@
 
 This repository is both the website for our wedding, and the infrastructure to deploy it.
 
-The website content is generated from Markdown source files and an HTML template. The website itself is private and therefore encrypted behind PageCrypt ([GitHub](https://github.com/lupine-dev/PageCrypt), [Website](https://pagecrypt.lupine.dev/)). This is automated with the script `generate_website.py`. The website is deployed via [GitHub pages](https://docs.github.com/en/pages).
+The website content is generated from Markdown source files and an HTML template. The website itself is private and therefore encrypted behind PageCrypt ([GitHub](https://github.com/lupine-dev/PageCrypt), [Website](https://pagecrypt.lupine.dev/)). This is automated with the script `build_website.py`. The website is deployed via [GitHub pages](https://docs.github.com/en/pages).
 
 For using it for your own project (wedding?), refer to the instructions below.
 
@@ -10,7 +10,7 @@ For using it for your own project (wedding?), refer to the instructions below.
 
 Preferable create a new virtual environment. I use Python 3.12.12 but many other versions should work. Install dependencies for website generation script and [lupine-dev/PageCrypt](https://github.com/lupine-dev/PageCrypt) submodule:
 
-```shell
+```sh
 pip install -r requirements.txt -r PageCrypt/python/requirements.txt
 ```
 
@@ -43,7 +43,7 @@ Refer to `source-secret/content-english-example.md` (which includes `source-secr
 
 ### Run the script
 
-Execute the Python script `generate_website.py`.
+Execute the Python script `build_website.py`.
 
 It should just work™️ if you followed the instructions and example files above. Feel free to comment/modify the `main` function if you don't need some features.
 
