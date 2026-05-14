@@ -77,6 +77,10 @@ div#footer {
     /*z-index: 1000; /* to be on top of other content */
 }
 
+
+/* Text and headings */
+
+
 h1, h2 {
     font-family: 'Waterfall', 'cursive';
     color: var(--heading-color);
@@ -114,9 +118,41 @@ ul, ol {
     text-align: left;
 }
 
+ul {
+    list-style-type: "\2014\a0"; /* em dash */
+}
+
+ol {
+    list-style-type: none;
+}
+
 code {
     font-size: 0.9rem;
 }
+
+
+/* Schedule table */
+
+
+table {
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+}
+
+tr > * {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+tr > *:nth-child(1) {
+    text-align: right;
+}
+
+tr > *:nth-child(2) {
+    text-align: left;
+}
+
 
 /* Landing page elements */
 
